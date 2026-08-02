@@ -1,6 +1,6 @@
 //jsx
 import { useState, useEffect } from "react"
-import { db } from "./firebase"
+import { auth, db } from "./firebase"
 import {
   collection,
   addDoc,
@@ -8,9 +8,15 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  query,
+  where,
 } from "firebase/firestore"
+import { onAuthStateChanged, signOut } from "firebase/auth"
+import Login from "./Login"
 
 function App(){
+  const [user, setUser] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
   const [tasks, setTasks] = useState([])
   const [newTaskText, setNewTaskText] = useState("")
   const [editingID, setEditingID] = useState(null)
@@ -19,8 +25,18 @@ function App(){
   const [newPriority, setNewPriority] = useState("Medium")
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser)
+      setAuthLoading(false)
+    })
+    return () => unsubscribe()
+  }, []) // [] means , run only once, not on every re-render.
+
+  useEffect(() => {
+    if (!user) return
     async function fetchTasks() {
-      const querySnapshot = await getDocs(collection(db, "tasks")) // await - pause this function until data comes.
+      const q = query(collection(db, "tasks"), where("uid", "==", user.uid))
+      const querySnapshot = await getDocs(q) // await - pause this function until data comes.
       const loadedTasks = querySnapshot.docs.map((docSnap) => ({
         id: docSnap.id,
         ...docSnap.data(),
@@ -28,7 +44,7 @@ function App(){
       setTasks(loadedTasks)
     }
     fetchTasks()
-  }, []) // [] means , run only once, not on every re-render.
+  }, [user])
 
   async function addTask(e) { // aysnc - wait for slow operations.
     e.preventDefault() //prevent to reload page
@@ -39,6 +55,7 @@ function App(){
        done: false,
        dueDate: newDueDate,
        priority: newPriority,
+       uid: user.uid,
     })
     setTasks([...tasks,
        {
@@ -47,6 +64,7 @@ function App(){
         done: false,
         dueDate: newDueDate,
         priority: newPriority,
+        uid: user.uid
       },
     ])
     setNewTaskText("")
@@ -84,9 +102,13 @@ function App(){
     setTasks(tasks.filter((task) => task.id !== id)) // filter() -> array method, returns a new array, never mutates.
   }
 
+  if (authLoading) return <p>Loading...</p>
+  if (!user) return <Login />
+
   return (
     <div>
       <h1>Journal Flow</h1>
+      <button onClick={() => signOut(auth)}>Log out</button>
 
       <form onSubmit={addTask}>
         <input
