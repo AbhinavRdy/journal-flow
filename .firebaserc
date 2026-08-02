@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "journal-flow-6e154"
+  },
+  "targets": {
+    "journal-flow-6e154": {
+      "hosting": {
+        "prod": [
+          "journal-flow-6e154"
+        ],
+        "dev": [
+          "journal-flow-dev"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
