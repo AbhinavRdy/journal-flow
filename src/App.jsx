@@ -15,15 +15,17 @@ function App(){
   const [newTaskText, setNewTaskText] = useState("")
   const [editingID, setEditingID] = useState(null)
   const [editText, setEditText] = useState("")
+  const [newDueDate, setNewDueDate] = useState("")
+  const [newPriority, setNewPriority] = useState("Medium")
 
-  useEffect(() => { 
+  useEffect(() => {
     async function fetchTasks() {
       const querySnapshot = await getDocs(collection(db, "tasks")) // await - pause this function until data comes.
       const loadedTasks = querySnapshot.docs.map((docSnap) => ({
         id: docSnap.id,
         ...docSnap.data(),
       }))
-      setTasks(loadedTasks)      
+      setTasks(loadedTasks)
     }
     fetchTasks()
   }, []) // [] means , run only once, not on every re-render.
@@ -35,9 +37,21 @@ function App(){
     const docRef = await addDoc(collection(db, "tasks"),{ // addDoc creates a new doc.
        text: newTaskText,
        done: false,
+       dueDate: newDueDate,
+       priority: newPriority,
     })
-    setTasks([...tasks, {id: docRef.id, text: newTaskText, done: false}])
+    setTasks([...tasks,
+       {
+        id: docRef.id,
+        text: newTaskText,
+        done: false,
+        dueDate: newDueDate,
+        priority: newPriority,
+      },
+    ])
     setNewTaskText("")
+    setNewDueDate("")
+    setNewPriority("Medium")
   }
 
   function startEditing(task){
@@ -81,6 +95,19 @@ function App(){
           onChange={(e) => setNewTaskText(e.target.value)} // e is the event object
           placeholder="Add a task..."
         />
+        <input
+          type="date"
+          value={newDueDate}
+          onChange={(e) => setNewDueDate(e.target.value)}
+          />
+        <select
+          value={newPriority}
+          onChange={(e) => setNewPriority(e.target.value)}
+        >
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
           <button type="submit">Add</button>
       </form>
 
@@ -104,6 +131,12 @@ function App(){
              ) : (
               <>
                 {task.text}
+                {task.dueDate && <span> (due {task.dueDate})</span>}
+                {task.priority && (
+                  <span style={{ color: priorityColor(task.priority), marginLeft: "6px"}}>
+                    [{task.priority}]
+                  </span>
+                )}
                 <button onClick={() => startEditing(task)}>Edit</button>
               </>
              )}
@@ -116,3 +149,9 @@ function App(){
 }
 
 export default App
+
+function priorityColor(priority) { // derived value
+  if (priority === "High") return "red"
+  if (priority === "Low") return "green"
+  return "orange"
+}
