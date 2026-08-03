@@ -6,28 +6,28 @@ import {
 } from "firebase/auth"
 
 function Login() {
+  const [mode, setMode] = useState("login") // "login" or "signup"
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
 
-  async function handleLogin(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     setError("")
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      if (mode === "login") {
+        await signInWithEmailAndPassword(auth, email, password)
+      } else {
+        await createUserWithEmailAndPassword(auth, email, password)
+      }
     } catch (err) {
       setError(err.message)
     }
   }
 
-  async function handleSignup(e) {
-    e.preventDefault()
+  function toggleMode() {
+    setMode(mode === "login" ? "signup" : "login")
     setError("")
-    try {
-      await createUserWithEmailAndPassword(auth, email, password)
-    } catch (err) {
-      setError(err.message)
-    }
   }
 
   return (
@@ -73,45 +73,62 @@ function Login() {
             </ul>
           </div>
 
-          <div className="flex-1 w-full max-w-sm bg-white/95 backdrop-blur rounded-xl shadow-xl p-8">
+          <div className="flex-1 w-full max-w-sm card p-8">
             <h2 className="text-xl font-bold text-gray-800 mb-1">
-              Welcome back
+              {mode === "login" ? "Welcome back" : "Create your account"}
             </h2>
             <p className="text-sm text-gray-400 mb-6">
-              Log in or create an account
+              {mode === "login"
+                ? "Log in to your task journal"
+                : "Start your task journal"}
             </p>
 
-            <form className="flex flex-col gap-3">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
-                className="border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className="input-field"
               />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
-                className="border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className="input-field"
               />
 
               {error && <p className="text-sm text-red-500">{error}</p>}
 
-              <button
-                onClick={handleLogin}
-                className="bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
-              >
-                Log In
-              </button>
-              <button
-                onClick={handleSignup}
-                className="border border-indigo-600 text-indigo-600 py-2 rounded-lg font-medium hover:bg-indigo-50 transition-colors"
-              >
-                Sign Up
+              <button type="submit" className="btn-primary">
+                {mode === "login" ? "Log In" : "Create Account"}
               </button>
             </form>
+
+            <p className="text-sm text-gray-500 mt-4 text-center">
+              {mode === "login" ? (
+                <>
+                  Don't have an account?{" "}
+                  <button
+                    onClick={toggleMode}
+                    className="text-indigo-600 font-medium hover:underline"
+                  >
+                    Sign up
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <button
+                    onClick={toggleMode}
+                    className="text-indigo-600 font-medium hover:underline"
+                  >
+                    Log in
+                  </button>
+                </>
+              )}
+            </p>
           </div>
         </main>
       </div>

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./components.css";
 
 body {
   margin: 0;

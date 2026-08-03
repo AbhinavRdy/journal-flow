@@ -134,16 +134,13 @@ function App() {
           </div>
         </div>
 
-        <form
-          onSubmit={addTask}
-          className="bg-white rounded-xl shadow-sm p-4 flex flex-wrap gap-3 mb-6"
-        >
+        <form onSubmit={addTask} className="card p-4 flex flex-wrap gap-3 mb-6">
           <input
             type="text"
             value={newTaskText}
             onChange={(e) => setNewTaskText(e.target.value)} // e is the event object
             placeholder="Add a task..."
-            className="flex-1 min-w-[160px] border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className="flex-1 min-w-[160px] input-field"
           />
           <input
             type={dateFocused || newDueDate ? "date" : "text"} // dynamic attribute
@@ -152,12 +149,12 @@ function App() {
             onBlur={() => setDateFocused(false)}
             onChange={(e) => setNewDueDate(e.target.value)}
             placeholder="Select a Date"
-            className="border border-gray-200 rounded-lg px-3 py-2 text-gray-600"
+            className="input-field"
           />
           <select
             value={newPriority}
             onChange={(e) => setNewPriority(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-gray-600"
+            className="input-field"
           >
             <option value="" disabled>
               Select Priority
@@ -166,10 +163,7 @@ function App() {
             <option value="Medium">Medium</option>
             <option value="High">High</option>
           </select>
-          <button
-            type="submit"
-            className="bg-indigo-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
-          >
+          <button type="submit" className="btn-primary">
             Add
           </button>
         </form>
@@ -178,7 +172,7 @@ function App() {
           {tasks.map((task) => (
             <li
               key={task.id}
-              className={`bg-white rounded-lg shadow-sm p-4 flex items-center gap-3 ${priorityBorderClass(task.priority)}`}
+              className={`card p-4 flex items-center gap-3 ${priorityBorderClass(task.priority)}`}
             >
               <input
                 type="checkbox"
@@ -192,7 +186,7 @@ function App() {
                     type="text"
                     value={editText}
                     onChange={(e) => setEditText(e.target.value)}
-                    className="flex-1 border border-gray-200 rounded-lg px-3 py-1"
+                    className="flex-1 input-field"
                   />
                   <button
                     onClick={() => saveEdit(task.id)}
