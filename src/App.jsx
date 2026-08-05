@@ -24,6 +24,9 @@ function App() {
   const [newDueDate, setNewDueDate] = useState("")
   const [dateFocused, setDateFocused] = useState(false)
   const [newPriority, setNewPriority] = useState("")
+  const [filterMode, setFilterMode] = useState("all") // "all" || "active" || "completed"
+  const [searchText, setSearchText] = useState("")
+  const [sortBy, setSortBy] = useState("createdAt") // "createdAt" || "priority"
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -60,6 +63,7 @@ function App() {
       dueDate: newDueDate,
       priority: newPriority,
       uid: user.uid,
+      createdAt: Date.now(),
     })
     setTasks([
       ...tasks,
@@ -70,6 +74,7 @@ function App() {
         dueDate: newDueDate,
         priority: newPriority,
         uid: user.uid,
+        createdAt: Date.now(),
       },
     ])
     setNewTaskText("")
@@ -107,6 +112,33 @@ function App() {
     setTasks(tasks.filter((task) => task.id !== id)) // filter() -> array method, returns a new array, never mutates.
   }
 
+  function getVisibleTasks() {
+    let result = tasks
+
+    if (filterMode === "active") {
+      result = result.filter((task) => !task.done)
+    } else if (filterMode === "completed") {
+      result = result.filter((task) => task.done)
+    }
+
+    if (searchText.trim() !== "") {
+      result = result.filter(
+        (task) => task.text.toLowerCase().includes(searchText.toLowerCase()), // Lowercasing both sides makes the search case-insensitive.
+      )
+    }
+
+    const priorityOrder = { High: 0, Medium: 1, Low: 2 } // lookup table
+    result = [...result].sort((a, b) => {
+      if (sortBy === "priority") {
+        return priorityOrder[a.priority] - priorityOrder[b.priority]
+      }
+      return (b.createdAt || 0) - (a.createdAt || 0)
+    })
+    return result
+  }
+
+  const visibleTasks = getVisibleTasks()
+
   if (authLoading)
     return <p className="text-center mt-10 text-gray-500">Loading...</p>
   if (!user) return <Login />
@@ -132,6 +164,41 @@ function App() {
               Log out
             </button>
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <div className="flex gap-2">
+            {["all", "active", "completed"].map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setFilterMode(mode)}
+                className={
+                  filterMode === mode
+                    ? "btn-primary text-sm px-3 py-1"
+                    : "btn-secondary text-sm px-3 py-1"
+                }
+              >
+                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          <input
+            type="text"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Search tasks..."
+            className="input-field flex-1 min-w-[140px]"
+          />
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="input-field"
+          >
+            <option value="createdAt">Sort: Newest first</option>
+            <option value="priority">Sort: Priority</option>
+          </select>
         </div>
 
         <form onSubmit={addTask} className="card p-4 flex flex-wrap gap-3 mb-6">
@@ -169,7 +236,7 @@ function App() {
         </form>
 
         <ul className="space-y-3">
-          {tasks.map((task) => (
+          {visibleTasks.map((task) => (
             <li
               key={task.id}
               className={`card p-4 flex items-center gap-3 ${priorityBorderClass(task.priority)}`}
